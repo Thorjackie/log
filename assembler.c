@@ -4,31 +4,73 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Cmd {
+struct {
+	unsigned int inst: 1;
+	unsigned int fop: 1;
+	unsigned int lop: 1;
+} match;
+
+struct mapping {
 	int value;
 	char* name;
 };
 
-struct Cmd Cmds[] = {
+struct mapping Cmds[] = {
 	{0x00, "nop"},
 	{0x10, "data"},
 	{0x20, "load"},
-	{0x30, "stor"}
+	{0x30, "stor"},
+	{0x40, "add"},
+	{0x50, "shl"},
+	{0x60, "shr"}
 };
 
-int CmdLen = sizeof(Cmds) / sizeof(struct Cmd);
+struct mapping Regs[] = {
+	{0x00, "r0"},
+	{0x01, "r1"},
+	{0x02, "r3"},
+	{0x03, "r4"}
+};
 
-void parseData(char* cmd) {
+int mapsize = sizeof(Cmds) / sizeof(struct mapping);
 
-	char* tok = NULL;
+void parseData(char* cmd, int cmd_line) {
 
-	while ((tok = strsep(&cmd, " "))) {
-		for ( int i = 0; i < CmdLen; i++) {
-			if (tok == Cmds[i].name) {
-				printf("oooh found one \n");
+	char* inst = NULL;
+	char* fop = NULL;
+	char* lop = NULL;
+	int bytearr[2] = {0};
+	int 
+	inst = strsep(&cmd, " "); // instruction
+	fop = strsep(&cmd, " "); // first operand
+	lop = strsep(&cmd, " "); // last operand
+
+	printf("[%s][%s][%s]\n", inst, fop, lop);
+
+	for (int i = 0; i < mapsize; i++) {
+		if(!strcmp(inst, Cmds[i].name)) {
+			bytearr[0] += Cmds[i].value;
+			printf("MATCH: %s\n", Cmds[i].name);
+			//match = 1;
+		}
+		if(i < sizeof(Regs) / sizeof(struct mapping)) {
+			if(!strcmp(fop, Regs[i].name)) {
+				bytearr[0] += Regs[i].value;
+				printf("MATCH: %s\n", Regs[i].name);
+			}
+			if(!strcmp(lop, Regs[i].name)) {
+				bytearr[0] += (Regs[i].value << 2);
+				printf("MATCH: %s\n", Regs[i].name);
 			}
 		}
 	}
+
+	//if (match == 0) {
+	//	fprintf(stderr, "Error invalid instruction %s on line %d.\n", inst, cmd_line);
+	//	exit(EXIT_FAILURE);
+	//}
+
+	printf("EOL\n");
 }
 
 int main(int argc, char** argv) {
@@ -36,6 +78,7 @@ int main(int argc, char** argv) {
 	FILE* fptr = NULL;
 	char* cmd = NULL;
 	size_t len = 0;
+	int line = 0;
 	//int* bytes = NULL;
 
 	if (argc != 2) {
@@ -48,8 +91,9 @@ int main(int argc, char** argv) {
 	}
 
 	while (getline(&cmd, &len, fptr) != -1) {
+		line++;
 		cmd[strcspn(cmd, "\n")] = 0;
-		parseData(cmd);
+		parseData(cmd, line);
 	}
 
 

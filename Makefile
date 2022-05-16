@@ -1,5 +1,14 @@
 CC=gcc
-CFLAGS=-Wall -Werror
+CFLAGS=-Wall -Werror -Wextra
 
-assembler: assembler.c
-	$(CC) $(CFLAGS) -o assembler assembler.c
+all: assembler rom
+
+assembler: src/assembler.c
+	$(CC) $(CFLAGS) -o assembler src/assembler.c
+
+rom: src/rom.c
+	$(CC) $(CFLAGS) -o rom src/rom.c
+
+clean:
+	rm assembler
+	rm rom

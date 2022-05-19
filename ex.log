@@ -1,0 +1,3 @@
+mov eax, 0x0100
+mov ebx, 0,0050
+add eax, ebx

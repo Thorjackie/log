@@ -1,3 +1,21 @@
-mov eax, 0x0100
-mov ebx, 0,0050
-add eax, ebx
+mov s0, 10
+str s0, [sp, 2]
+mov s0, 20
+str s0, [sp, 4]
+mov s0, 0
+ldr s0, [sp, 4]
+ldr s1, [sp, 2]
+add s0, s1
+str s0, [sp, 6]
+
+dat r0, 10
+str r0, sp
+
+r0
+r1
+r2
+r3
+sp
+bp
+acc
+xx

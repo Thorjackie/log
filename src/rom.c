@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FETCH ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, sIR
+#define LINE(X) (16*X)
 
 // Enables
 const int eACC	= 0x0001;
@@ -34,45 +34,39 @@ const int sIR	= 0x0800;
 const int sRA	= 0x1000;
 const int sRB	= 0x2000;
 
+void writeLine(int* buffer, int* data, int line, size_t len) {
+	int fetch[] = {ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, sIR}; // fetch
+	memcpy(buffer + 16 * line, fetch, sizeof fetch);
+	memcpy(buffer + 16 * line + 5, data, len);
+}
+
 
 int main() {
-	int fetch[] = {
-		ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, sIR
-	};
-	int data[] = {
-		ePC|sMAR, ePCCT|sPC|eRAM|sREG, sRST
-	};
-	int store[] = {
-		ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eREG|sRAM
-	}
-	int load[] = {
-		ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRAM|sREG
-	};
-	int cmp[] = {
-		eREG
-	}
-	//int add[];
-	//int not[];
-	//int and[];
-	//int jmp[];
-	//int jmpc[];
 
-	int* data_inst = calloc(16, sizeof(int));
-	if (data_inst == NULL) {
-		fprintf(stderr, "calloc returned (NULL)!\n");
-		exit(EXIT_FAILURE);
-	}
-	memcpy(data_inst, fetch, 5 * sizeof(int));
-	for (int i = 0; i < 5; i++) {
-		printf("%x ", data_inst[i]);
-	}
-	printf("\n");
-	memcpy(&data_inst[5], data, 3 * sizeof(int));
-	for (int i = 0; i < 8; i++) {
-		printf("%x ", data_inst[i]);
-	}
-	printf("\n");
+	int insts[][16] = {
+		{ePC|sMAR, ePCCT|sPC|eRAM|sRA, sRST}, // data
+		//{ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eREG|sRAM}, // store
+		//{ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRAM|sREG} // load
+	};
+	//int cmp[]
+	//int add[]
+	//int not[]
+	//int and[]
+	//int jmp[]
+	//int jmpc[]
+	int* dump = calloc(16*9, sizeof(int)); // steps * instructions	
+	writeLine(dump, insts[0], 1, sizeof insts[0]);
 
-	free(data_inst);
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 16; j++) {
+			printf("%x ", dump[j * i]);
+		}
+		printf("\n");
+	}
+
+	for (int i = 0; i < 16*9; i++ ) {
+		printf("%x\n", dump[i]);
+	}
+	free(dump);
 	return 0;
 }

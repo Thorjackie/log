@@ -11,11 +11,18 @@ str s0, [sp, 6]
 dat r0, 10
 str r0, sp
 
-r0
-r1
-r2
-r3
-sp
-bp
-acc
-xx
+00000000 00000000
+^----^^---^^-^^-^
+   |     |  |   |
+ inst   flg rb  ra
+
+four zones:
+
+false:
+64x16
+carry:
+64x16
+greater:
+64x16
+equal:
+64x16

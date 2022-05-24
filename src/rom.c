@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct INST {
+        int data[16];
+        size_t size;
+} INST;
+
 // Enables
 const int eACC	= 0x0001; // enable accumulator register
 const int eOP0	= 0x0002; // enable ALU OP 0 bit
@@ -32,23 +37,18 @@ const int sIR	= 0x0800; // set instruction register
 const int sRA	= 0x1000; // set register a
 const int sRB	= 0x2000; // set register b
 
-const int fetch[] = {ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, sIR};
-const int fetch_size = sizeof fetch;
+const INST fetch = {{ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, sIR}, 5};
 
-void writeLine(int* buffer, int* data, int line, size_t len) {
-	memcpy(buffer + 16 * line, fetch, fetch_size);
-	memcpy(buffer + 16 * line + 5, data, len);
+void writeLine(int* buffer, INST inst, int line) {
+        memcpy(buffer + (16 * line), fetch.data, fetch.size); // add fetch data to buffer
+        memcpy(buffer + (16 * line) + fetch.len, inst.data, inst.data); // add instruction data to buffer
 }
-
 
 int main() {
 
-	int insts[][16] = {
-		{ePC|sMAR, ePCCT|sPC|eRAM|sRA, sRST}, // data
-		//{ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eREG|sRAM}, // store
-		//{ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRAM|sREG} // load
-	};
 	int empty[] = {sRST};
+    INST empty = {{sRST}, 1};
+
 	int data[]  = {ePC|sMAR, ePCCT|sPC|eRAM|sRA, sRST};
 	int store[] = {ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRA|sRAM};
 	int load[]  = {ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRAM|sRA};
@@ -60,7 +60,13 @@ int main() {
 	
 	int jmp[] = {ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePCLD|sPC};
 	int jmpc[] = {ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePCLD|sPC};
-	int* dump = calloc(16*1024, sizeof(int));	
+
+	int* dump = malloc(16*128*sizeof(int));
+
+    for (int i = 0; i < 128; i++) {
+            writeLine(dump, empty, i, sizeof empty);
+    }
+
 	writeLine(dump, empty, 0, sizeof empty);
 	writeLine(dump, data, 1, sizeof data);
 	writeLine(dump, store, 2, sizeof store);
@@ -71,6 +77,16 @@ int main() {
 	writeLine(dump, cmp, 7, sizeof cmp);
 	writeLine(dump, jmp, 8, sizeof jmp);
 
+	writeLine(dump, empty, 64, sizeof empty);
+	writeLine(dump, data, 65, sizeof data);
+	writeLine(dump, store, 66, sizeof store);
+	writeLine(dump, load, 67, sizeof load);
+	writeLine(dump, add, 68, sizeof add);
+	writeLine(dump, and, 69, sizeof and);
+	writeLine(dump, not, 70, sizeof not);
+	writeLine(dump, cmp, 71, sizeof cmp);
+	writeLine(dump, jmp, 72, sizeof jmp);
+    writeLine(dump, jmpc, 73, sizeof jmpc);
 
 	free(dump);
 	return 0;

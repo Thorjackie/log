@@ -1,5 +1,17 @@
+#include <stdio.h>
 int main() {
-	int x = 4;
-	int y = 5;
-	int a = x + y;
+
+        struct data {
+                int arr[10];
+                int len;
+        };
+        
+        struct data x = {
+                {1, 2, 3, 4},
+                sizeof x.arr
+        };
+
+        printf("%d\n", x.len);
+
+        return 0;
 }

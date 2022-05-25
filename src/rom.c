@@ -89,15 +89,22 @@ int main() {
 	writeLine(dump, jmp, 72, sizeof jmp);
     	writeLine(dump, jmpc, 73, sizeof jmpc);
 
-	for (int i = 0; i < 128; i++) {
-		if (i % 16 != 0) {
-			printf("%X ", dump[i]);
+
+	FILE* output = fopen("rom.dump", "w");
+	if (!output) {
+		printf("error opening file\n");
+	}
+	fprintf(output, "v2.0 raw\n");
+	for (int i = 0; i < 16 * 128; i++) {
+		if (i % 16 == 0) {
+			fprintf(output, "\n%x ", dump[i]);
 		} else {
-			printf("\n%X ", dump[i]);
+			fprintf(output, "%x ", dump[i]);
 		}
 	}
-	printf("\n");
+	fprintf(output, "\n");
 
+	fclose(output);
 	free(dump);
 	return 0;
 }

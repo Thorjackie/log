@@ -12,3 +12,4 @@ rom: src/rom.c
 clean:
 	rm assembler
 	rm rom
+	rm rom.dump

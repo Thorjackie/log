@@ -30,15 +30,18 @@ INST registers[] = {
 	{"r7", 0x07}
 };
 
+void lexer(char* line, int width) {
+        int output[2] = {0};
 
-char* parse(char* line, size_t size) {
-	char tmp[size];
-	strcpy(tmp, line);
-	char* inst = strtok(tmp, " ");
-	for (int i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
-		if (!strcmp(inst, 
+        char* first = strtok(line, " ");
+        char* sec = strtok(NULL, ",");
+        char* thr = strtok(NULL, "\n");
 
-	return line;
+        if (thr[0] == ' ') {
+                thr++;
+        }
+
+        printf("%d: (%s)(%s)(%s)\n", width, first, sec, thr);
 }
 
 int main(int argc, char** argv) {
@@ -56,11 +59,13 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "error opening %s\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
+    
+    while (getline(&line,  &size, input) != -1) {
+            if (line[0] != '\n') {
+                lexer(line, size);
+            }
+    }
 
-	while (getline(&line, &size, input) != -1) {
-		line = parse(line, size);
-		
-	}
 	free(line);
 	return 0;
 }

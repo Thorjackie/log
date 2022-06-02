@@ -3,20 +3,32 @@
 #include <string.h>
 
 int main() {
-        char* cmd0 = "mov r0, 4";
-        char* cmd1 = "add r0, r1";
-        char* cmd2 = "ldr r0, [sp 4]";
+        const char* cmd0 = "mov r0, 4";
+        const char* cmd1 = "add r0, r1";
+        const char* cmd2 = "ldr r0, [sp 4]";
 
-        char* data0 = strchr(cmd0, ',');
-        char* data1 = strchr(cmd1, ',');
-        char* data2 = strchr(cmd2, ',');
+	char *token, *str0, *str1, *str2;
 
-        data0 += 2;
-        data1 += 2;
-        data2 += 2;
+	str0 = strdup(cmd0);
+	str1 = strdup(cmd1);
+	str2 = strdup(cmd2);
 
-        printf("(%s)\n(%s)\n(%s)\n", data0, data1, data2);
+	while ((token = strsep(&str0, ", []"))) {
+		printf("(%s) ", token);
+	}
+	printf("\n");
+	while ((token = strsep(&str1, ", []"))) {
+		printf("(%s) ", token);
+	}
+	printf("\n");
+	while ((token = strsep(&str2, ", []"))) {
+		printf("(%s) ", token);
+	}
+	printf("\n");
 
+	free(str0);
+	free(str1);
+	free(str2);
         return 0;
 }
 

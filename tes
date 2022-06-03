@@ -5,3 +5,5 @@ ram -> sh
 sh -> tmp
 sp - tmp -> acc
 acc -> 
+
+ePC|sMAR, ePCCT|sPC|eRAM|sSH, ePC|sMAR, ePCCT|sPC|eRAM|sSH, eSH|sTMP, eSP|ALU_SUB|sACC, 

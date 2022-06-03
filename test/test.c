@@ -1,34 +1,15 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 int main() {
-        const char* cmd0 = "mov r0, 4";
-        const char* cmd1 = "add r0, r1";
-        const char* cmd2 = "ldr r0, [sp 4]";
+        uint8_t minuend = 8;
+        uint8_t subtrahend = 3;
+        bool carry = 0;
 
-	char *token, *str0, *str1, *str2;
+        subtrahend = ~subtrahend;
+        minuend += subtrahend + ~carry;
+        printf("%d\n", minuend);
 
-	str0 = strdup(cmd0);
-	str1 = strdup(cmd1);
-	str2 = strdup(cmd2);
-
-	while ((token = strsep(&str0, ", []"))) {
-		printf("(%s) ", token);
-	}
-	printf("\n");
-	while ((token = strsep(&str1, ", []"))) {
-		printf("(%s) ", token);
-	}
-	printf("\n");
-	while ((token = strsep(&str2, ", []"))) {
-		printf("(%s) ", token);
-	}
-	printf("\n");
-
-	free(str0);
-	free(str1);
-	free(str2);
         return 0;
 }
-

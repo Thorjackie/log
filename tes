@@ -1,0 +1,7 @@
+pc -> mar
+ram -> sh
+pc -> mar
+ram -> sh
+sh -> tmp
+sp - tmp -> acc
+acc -> 

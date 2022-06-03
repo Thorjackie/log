@@ -1,28 +1,38 @@
-mov s0, 10
-str s0, [sp, 2]
-mov s0, 20
-str s0, [sp, 4]
-mov s0, 0
-ldr s0, [sp, 4]
-ldr s1, [sp, 2]
+// move long
+movl L0, $4000
+movl L1, 4096
+movl SP, L1
+
+// move short
+movs S0, $40
+movs S1, 64
+movs S0, S1
+
+// store, load relative long
+(strl)(ldrl) L1, [sp, 2]
+
+// store, load relative short
+(strs)(ldrs) S0, [sp, 1]
+
+// store, load absolute long
+(stal)(ldal) L1, $4000
+(stal)(ldal) L1, 4096
+
+// store, load absolute short
+(stas)(ldas) L1, $4000
+(stas)(ldas) L1, 4096
+
 add s0, s1
-str s0, [sp, 6]
-
-dat r0, 10
-str r0, sp
-
-00000000 00000000
-^----^^---^^-^^-^
-   |     |  |   |
- inst   flg rb  ra
-
-four zones:
-
-false:
-64x16
-carry:
-64x16
-greater:
-64x16
-equal:
-64x16
+add l0, l1
+sub s0, s1
+sub l0, l1
+and s0, s1
+and l0, l1
+or s0, s1
+or l0, l1
+xor s0, s1
+xor l0, l1
+not s0, s1
+not l0, l1
+cmp s0, s1
+cmp l0, l1

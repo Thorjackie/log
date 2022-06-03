@@ -2,11 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct INST {
-        int data[16];
-        size_t size;
-	int len;
-} INST;
 
 // Enables
 const int eACC	= 0x00010000; // enable accumulator register
@@ -38,7 +33,7 @@ const int sIR	= 0x00000800; // set instruction register
 const int sRA	= 0x00001000; // set register a
 const int sRB	= 0x00002000; // set register b
 
-const int fetch[] = {ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, ePC|sMAR, ePCCT|sPC|eRAM|sIRSH, sIR};
+const int fetch[] = {ePC|sMAR, ePCCT|sPC|eRAM|sSH, ePC|sMAR, ePCCT|sPC|eRAM|sSH, eSH|sIR};
 const int fetch_size = sizeof fetch;
 
 void writeLine(int* buffer, int* inst, int line, size_t inst_size) {
@@ -49,6 +44,41 @@ void writeLine(int* buffer, int* inst, int line, size_t inst_size) {
 int main() {
 
 	int empty[] = {sRST};
+
+    // move short constant -> register
+    int mvsc[] = {ePC|sMAR, ePCCT|sPC|eRAM|sRA, sRST};
+    // move long constant -> register
+    int mvlc[] = {ePC|sMAR, ePCCT|sPC|eRAM|sSH, ePC|sMAR, ePCCT|sPC|eRAM|sSH, eSH|sRA, sRST};
+    // move register -> register
+    int mvrr[] = {eRA|sRB, sRST};
+    // store short relative
+    int stsr[] = {};
+    // store long relative
+    int stlr[] = {ePC|sMAR, ePCCT|sPC|eRAM|sSH, ePC|sMAR, ePCCT|sPC|eRAM|sSH,, eRB|ALU_SUB|sACC, eACC|sMAR, eRA};
+    // store short absolute
+    int stsa[] = {};
+    // store long absolute
+    int stla[] = {};
+    // load short relative
+    int ldsr[] = {};
+    // load long relative
+    int ldlr[] = {};
+    // load short absolute
+    int ldsa[] = {};
+    // load long absolute
+    int ldla[] = {};
+    // add
+    // sub
+    // and
+    // or
+    // xor
+    // not
+    // cmp
+    // jmp
+    // jmpc
+    // jmpg
+    // jmpe
+    // jmpz
 
 	int data[]  = {ePC|sMAR, ePCCT|sPC|eRAM|sRA, sRST};
 	int store[] = {ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRA|sRAM, sRST};
@@ -87,7 +117,7 @@ int main() {
 	writeLine(dump, not, 70, sizeof not);
 	writeLine(dump, cmp, 71, sizeof cmp);
 	writeLine(dump, jmp, 72, sizeof jmp);
-    	writeLine(dump, jmpc, 73, sizeof jmpc);
+    writeLine(dump, jmpc, 73, sizeof jmpc);
 
 
 	FILE* output = fopen("rom.dump", "w");

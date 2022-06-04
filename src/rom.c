@@ -43,30 +43,123 @@ void writeLine(int* buffer, int* inst, int line, size_t inst_size) {
 
 int main() {
 
-	int empty[] = {sRST};
+	int empty[] = {
+            sRST
+    };
 
     // move short constant -> register
-    int mvsc[] = {ePC|sMAR, ePCCT|sPC|eRAM|sRA, sRST};
+    int mvsc[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sRA,
+            sRST
+    };
     // move long constant -> register
-    int mvlc[] = {ePC|sMAR, ePCCT|sPC|eRAM|sSH, ePC|sMAR, ePCCT|sPC|eRAM|sSH, eSH|sRA, sRST};
+    int mvlc[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sRA,
+            sRST
+    };
     // move register -> register
-    int mvrr[] = {eRA|sRB, sRST};
+    int mvrr[] = {
+            eRA|sRB,
+            sRST
+    };
     // store short relative
-    int stsr[] = {};
+    int stsr[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sTMP,
+            eRB|ALU_SUB|sACC,
+            eACC|sMAR,
+            eRA|sRAM,
+            sRST
+    };
     // store long relative
-    int stlr[] = {ePC|sMAR, ePCCT|sPC|eRAM|sSH, ePC|sMAR, ePCCT|sPC|eRAM|sSH,, eRB|ALU_SUB|sACC, eACC|sMAR, eRA};
+    int stlr[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sTMP,
+            eRA|sSH,
+            eRB|ALU_SUB|sACC,
+            eACC|sMAR|ALU_INC|sACC,
+            eSH|sRAM,
+            eACC|sMAR,
+            eSH|sRAM
+    };
     // store short absolute
-    int stsa[] = {};
+    int stsa[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sMAR,
+            eRA|sRAM,
+            sRST
+    };
     // store long absolute
-    int stla[] = {};
+    int stla[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sMAR|ALU_INC|sACC,
+            eRA|sSH,
+            eSH|sRAM,
+            eACC|sMAR,
+            eSH|sRAM,
+            sRST 
+    };
     // load short relative
-    int ldsr[] = {};
+    int ldsr[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sTMP,
+            eRB|ALU_SUB|sACC,
+            eACC|sMAR,
+            eRAM|sRA
+            sRST
+    };
     // load long relative
-    int ldlr[] = {};
+    int ldlr[] = {            
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sTMP,
+            eRB|ALU_SUB|sACC,
+            eACC|sMAR|ALU_INC|sACC,
+            eRA|sSH,
+            eSH|sRAM,
+            eACC|sMAR,
+            eSH|sRAM
+    };
     // load short absolute
-    int ldsa[] = {};
+    int ldsa[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            eSH|sMAR,
+            eRAM|sRA,
+            sRST
+    };
     // load long absolute
-    int ldla[] = {};
+    int ldla[] = {
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+            ePC|sMAR,
+            ePCCT|sPC|eRAM|sSH,
+
+    };
     // add
     // sub
     // and

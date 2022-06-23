@@ -1,233 +1,95 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+#define FILENAME "output_rom"
+
+const int sRA	= pow(2, 0);
+const int shl	= pow(2, 1);
+const int sSP	= pow(2, 2);
+const int sPC	= pow(2, 3);
+const int sMB	= pow(2, 4);
+const int sRST	= pow(2, 5);
+const int sFLG	= pow(2, 6);
+const int sTMP	= pow(2, 7);
+const int sACC	= pow(2, 8);
+const int sRAM	= pow(2, 9);
+const int sIR	= pow(2, 10);
+const int sBUS	= pow(2, 11);
+
+const int eRA	= pow(2, 12);
+const int ehl	= pow(2, 13);
+const int HLsel	= pow(2, 14);
+const int eSP	= pow(2, 15);
+const int ePC	= pow(2, 16);
+const int ePCct	= pow(2, 17);
+const int ePCld	= pow(2, 18);
+const int eMB	= pow(2, 19);
+const int eMBct	= pow(2, 20);
+const int eMBld	= pow(2, 21);
+const int OP2	= pow(2, 22);
+const int OP1	= pow(2, 23);
+const int OP0	= pow(2, 24);
+const int eFLG	= pow(2, 25);
+const int eALU	= pow(2, 26);
+const int eACC	= pow(2, 27);
+const int eRAM	= pow(2, 28);
+const int eHL	= pow(2, 29);
+
+const int PCinc = ePCct|sPC;
+const int PCdec = ePCct|ePCld|sPC;
+const int PCld 	= ePCld|sPC;
+
+const int MBinc = eMBct|sMB;
+const int MBdec = eMBct|eMBld|sMB;
+const int MBld	= eMBld|sMB;
 
 
-// Enables
-const int eACC	= 0x00010000; // enable accumulator register
-const int eOP0	= 0x00020000; // enable ALU OP 0 bit
-const int eOP1	= 0x00040000; // enable ALU OP 1 bit
-const int ePC	= 0x00080000; // enable Program Counter
-const int ePCCT	= 0x00100000; // enable program counter count bit
-const int ePCLD	= 0x00200000; // enable program counter load bit
-const int eRAM	= 0x00400000; // enable ram out
-const int eADB	= 0x00800000; // enable 16 bit alu mode
-const int eSP	= 0x01000000; // enable stack pointer register
-const int eBP	= 0x02000000; // enable base pointer register
-const int eRA	= 0x04000000; // enable register a
-const int eRB	= 0x08000000; // enable register b
 
-// Sets
-const int sACC	= 0x00000001; // set accumulator register
-const int sTMP	= 0x00000002; // set alu tmp register
-const int sMAR	= 0x00000004; // set memory address register
-const int sPC	= 0x00000008; // set program counter
-const int sPCSH	= 0x00000010; // set program counter shift register
-const int sSP	= 0x00000020; // set stack pointer register
-const int sBP	= 0x00000040; // set base pointer register
-const int sRAM	= 0x00000080; // set ram
-const int sFLG	= 0x00000100; // set flag register
-const int sIRSH = 0x00000200; // set instruction shift register
-const int sRST	= 0x00000400; // set reset flag
-const int sIR	= 0x00000800; // set instruction register
-const int sRA	= 0x00001000; // set register a
-const int sRB	= 0x00002000; // set register b
 
-const int fetch[] = {ePC|sMAR, ePCCT|sPC|eRAM|sSH, ePC|sMAR, ePCCT|sPC|eRAM|sSH, eSH|sIR};
-const int fetch_size = sizeof fetch;
 
-void writeLine(int* buffer, int* inst, int line, size_t inst_size) {
-	memcpy(buffer + (16 * line), fetch, fetch_size);
-	memcpy(buffer + (16 * line) + (fetch_size / sizeof(int)), inst, inst_size);
+const int load_acc[16] = {
+	ePC|PCinc|eRAM|sIR,
+	eRA|sACC,
+	sRST
+};
+const int stor_reg[16] = {
+	ePC|PCinc|eRAM|sIR,
+	eACC|sRA,
+	sRST
+};
+const int load_imm[16] = {
+	ePC|PCinc|eRAM|sIR,
+	ePC|PCinc|eRAM|sRA,
+	sRST
+};
+
+void writeInst(FILE* file, const int* instruction) {
+	for (int i = 0; i < 16; i++) {
+		if (instruction[i] > 0) {
+			fprintf(file, "%d ", instruction[i]);
+		} else {
+			fprintf(file, "%d*0", 16 - i);
+			break;
+		}
+	}
+	fprintf(file, "\n");
 }
 
 int main() {
 
-	int empty[] = {
-            sRST
-    };
+	FILE* output = NULL;
 
-    // move short constant -> register
-    int mvsc[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sRA,
-            sRST
-    };
-    // move long constant -> register
-    int mvlc[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sRA,
-            sRST
-    };
-    // move register -> register
-    int mvrr[] = {
-            eRA|sRB,
-            sRST
-    };
-    // store short relative
-    int stsr[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sTMP,
-            eRB|ALU_SUB|sACC,
-            eACC|sMAR,
-            eRA|sRAM,
-            sRST
-    };
-    // store long relative
-    int stlr[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sTMP,
-            eRA|sSH,
-            eRB|ALU_SUB|sACC,
-            eACC|sMAR|ALU_INC|sACC,
-            eSH|sRAM,
-            eACC|sMAR,
-            eSH|sRAM
-    };
-    // store short absolute
-    int stsa[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sMAR,
-            eRA|sRAM,
-            sRST
-    };
-    // store long absolute
-    int stla[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sMAR|ALU_INC|sACC,
-            eRA|sSH,
-            eSH|sRAM,
-            eACC|sMAR,
-            eSH|sRAM,
-            sRST 
-    };
-    // load short relative
-    int ldsr[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sTMP,
-            eRB|ALU_SUB|sACC,
-            eACC|sMAR,
-            eRAM|sRA
-            sRST
-    };
-    // load long relative
-    int ldlr[] = {            
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sTMP,
-            eRB|ALU_SUB|sACC,
-            eACC|sMAR|ALU_INC|sACC,
-            eRA|sSH,
-            eSH|sRAM,
-            eACC|sMAR,
-            eSH|sRAM
-    };
-    // load short absolute
-    int ldsa[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            eSH|sMAR,
-            eRAM|sRA,
-            sRST
-    };
-    // load long absolute
-    int ldla[] = {
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-            ePC|sMAR,
-            ePCCT|sPC|eRAM|sSH,
-
-    };
-    // add
-    // sub
-    // and
-    // or
-    // xor
-    // not
-    // cmp
-    // jmp
-    // jmpc
-    // jmpg
-    // jmpe
-    // jmpz
-
-	int data[]  = {ePC|sMAR, ePCCT|sPC|eRAM|sRA, sRST};
-	int store[] = {ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRA|sRAM, sRST};
-	int load[]  = {ePC|sMAR, ePCCT|sPC|eRAM|eADB|sTMP, eSP|eADB|sACC, eACC|eADB|sMAR, eRAM|sRA, sRST};
-
-	int add[] = {eRB|sTMP, eRA|sACC, eACC|sRB, sRST};
-	int and[] = {eRB|sTMP, eRA|eOP0|sACC, eACC|sRB, sRST};
-	int not[] = {eRB|sTMP, eRA|eOP1|sACC, eACC|sRB, sRST};
-	int cmp[] = {eRB|sTMP, eRA|eOP0|eOP1|sFLG, sRST};
-	
-	int jmp[] = {ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePCLD|sPC, sRST};
-	int jmpc[] = {ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePC|sMAR, ePCCT|sPC|eRAM|sPCSH, ePCLD|sPC, sRST};
-
-	int* dump = malloc(16*128*sizeof(int));
-
-    for (int i = 0; i < 128; i++) {
-            writeLine(dump, empty, i, sizeof empty);
-    }
-
-	writeLine(dump, empty, 0, sizeof empty);
-	writeLine(dump, data, 1, sizeof data);
-	writeLine(dump, store, 2, sizeof store);
-	writeLine(dump, load, 3, sizeof load);
-	writeLine(dump, add, 4, sizeof add);
-	writeLine(dump, and, 5, sizeof and);
-	writeLine(dump, not, 6, sizeof not);
-	writeLine(dump, cmp, 7, sizeof cmp);
-	writeLine(dump, jmp, 8, sizeof jmp);
-
-	writeLine(dump, empty, 64, sizeof empty);
-	writeLine(dump, data, 65, sizeof data);
-	writeLine(dump, store, 66, sizeof store);
-	writeLine(dump, load, 67, sizeof load);
-	writeLine(dump, add, 68, sizeof add);
-	writeLine(dump, and, 69, sizeof and);
-	writeLine(dump, not, 70, sizeof not);
-	writeLine(dump, cmp, 71, sizeof cmp);
-	writeLine(dump, jmp, 72, sizeof jmp);
-    writeLine(dump, jmpc, 73, sizeof jmpc);
-
-
-	FILE* output = fopen("rom.dump", "w");
+	output = fopen(FILENAME, "w");
 	if (!output) {
-		printf("error opening file\n");
+		printf("error opening file: %s\n", FILENAME);
 	}
 	fprintf(output, "v2.0 raw\n");
-	for (int i = 0; i < 16 * 128; i++) {
-		if (i % 16 == 0) {
-			fprintf(output, "\n%x ", dump[i]);
-		} else {
-			fprintf(output, "%x ", dump[i]);
-		}
-	}
-	fprintf(output, "\n");
+	writeInst(output, load_acc);
+	writeInst(output, stor_reg);
+	writeInst(output, load_imm);
 
 	fclose(output);
-	free(dump);
 	return 0;
 }

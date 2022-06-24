@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define FILENAME "output_rom"
+#define FILENAME "rom.dump"
 
 const int sRA	= 0x1;
 const int shl	= 0x2;
@@ -35,7 +35,8 @@ const int eFLG	= 0x2000000;
 const int eALU	= 0x4000000;
 const int eACC	= 0x8000000;
 const int eRAM	= 0x10000000;
-const int eHL	= 0x20000000;
+const int eHL16	= 0x20000000;
+const int e16t	= 0x40000000;
 
 const int PCinc = ePCct|sPC;
 const int PCdec = ePCct|ePCld|sPC;
@@ -46,14 +47,19 @@ const int MBdec = eMBct|eMBld|sMB;
 const int MBld	= eMBld|sMB;
 
 const int sL = shl;
-const int sH = shl | HLsel;
 const int eL = ehl;
+const int sH = shl | HLsel;
 const int eH = ehl | HLsel;
+const int sHL = shl;
+const int eHL = eHL16 | ehl;
 
 const int ALU_ADD = 0;
 const int ALU_SUB = OP0;
-const int 
 
+const int empty[16] = {
+	ePC|PCinc|eRAM|sIR,
+	sRST
+};
 
 const int load_acc[16] = {
 	ePC|PCinc|eRAM|sIR,
@@ -72,22 +78,41 @@ const int load_imm[16] = {
 };
 const int load_abs[16] = {
 	ePC|PCinc|eRAM|sIR, 
-    ePC|PCinc|eRAM|sH,
-    ePC|PCinc|eRAM|sL,
-    eHL|eRAM|sRA,
-    sRST
+	ePC|PCinc|eRAM|sH,
+	ePC|PCinc|eRAM|sL,
+	eHL|eRAM|sRA,
+	sRST
 };
 const int load_rel[16] = {
 	ePC|PCinc|eRAM|sIR, 
-    eSP|sHL,
-    eH|sACC,
-    ePC|PCinc|eRAM|sTMP,
-    ALU_SUB|eALU|sFLG|sH,
-    eL|sACC,
-    ePC|PCinc|eRAM|sTMP,
-    ALU_SUB|eFLG|eALU|sL,
-    eHL|eRAM|sRA,
-    sRST
+	eSP|e16t|sHL,
+	eH|sACC,
+	ePC|PCinc|eRAM|sTMP,
+	ALU_SUB|eALU|sFLG|sH,
+	eL|sACC,
+	ePC|PCinc|eRAM|sTMP,
+	ALU_SUB|eFLG|eALU|sL,
+	eHL|eRAM|sRA,
+	sRST
+};
+const int stor_abs[16] = {
+	ePC|PCinc|eRAM|sIR,
+	ePC|PCinc|eRAM|sH,
+	ePC|PCinc|eRAM|sL,
+	eHL|eRA|sRAM,
+	sRST
+};
+const int stor_rel[16] = {
+	ePC|PCinc|eRAM|sIR, 
+	eSP|e16t|sHL,
+	eH|sACC,
+	ePC|PCinc|eRAM|sTMP,
+	ALU_SUB|eALU|sFLG|sH,
+	eL|sACC,
+	ePC|PCinc|eRAM|sTMP,
+	ALU_SUB|eFLG|eALU|sL,
+	eHL|eRA|sRAM,
+	sRST
 };
 
 void writeInst(FILE* file, const int* instruction) {
@@ -95,7 +120,7 @@ void writeInst(FILE* file, const int* instruction) {
 		if (instruction[i] > 0) {
 			fprintf(file, "%x ", instruction[i]);
 		} else {
-			fprintf(file, "%x*0", 16 - i);
+			fprintf(file, "%d*0", 16 - i);
 			break;
 		}
 	}
@@ -111,9 +136,14 @@ int main() {
 		printf("error opening file: %s\n", FILENAME);
 	}
 	fprintf(output, "v2.0 raw\n");
+	writeInst(output, empty);
 	writeInst(output, load_acc);
 	writeInst(output, stor_reg);
 	writeInst(output, load_imm);
+	writeInst(output, load_abs);
+	writeInst(output, load_rel);
+	writeInst(output, stor_abs);
+	writeInst(output, stor_rel);
 
 	fclose(output);
 	return 0;

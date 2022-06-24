@@ -4,6 +4,7 @@
 #include <math.h>
 
 #define FILENAME "rom.dump"
+#define INST_SIZE 16
 
 const int sRA	= 0x1;
 const int shl	= 0x2;
@@ -56,94 +57,92 @@ const int eHL = eHL16 | ehl;
 const int ALU_ADD = 0;
 const int ALU_SUB = OP0;
 
-const int empty[16] = {
-	ePC|PCinc|eRAM|sIR,
-	sRST
+const int insts[][INST_SIZE] = {
+    { // empty
+        ePC|PCinc|eRAM|sIR,
+        sRST
+    },
+    { // load acc <- reg
+	    ePC|PCinc|eRAM|sIR,
+	    eRA|sACC,
+	    sRST
+    },
+    { // load reg <- acc
+	    ePC|PCinc|eRAM|sIR,
+	    eACC|sRA,
+	    sRST
+    },
+    { // load reg <- imm
+	    ePC|PCinc|eRAM|sIR,
+	    ePC|PCinc|eRAM|sRA,
+	    sRST
+    },
+    { // load reg <- *imm
+	    ePC|PCinc|eRAM|sIR, 
+	    ePC|PCinc|eRAM|sH,
+	    ePC|PCinc|eRAM|sL,
+	    eHL|eRAM|sRA,
+	    sRST
+    },
+    { // load reg <- *(*sp - *imm)
+	    ePC|PCinc|eRAM|sIR, 
+	    eSP|e16t|sHL,
+	    eH|sACC,
+	    ePC|PCinc|eRAM|sTMP,
+	    ALU_SUB|eALU|sFLG|sH,
+	    eL|sACC,
+	    ePC|PCinc|eRAM|sTMP,
+	    ALU_SUB|eFLG|eALU|sL,
+	    eHL|eRAM|sRA,
+	    sRST
+    },
+    { // store reg -> *imm
+	    ePC|PCinc|eRAM|sIR,
+	    ePC|PCinc|eRAM|sH,
+	    ePC|PCinc|eRAM|sL,
+	    eHL|eRA|sRAM,
+	    sRST
+    },
+    { // store reg -> *(sp - imm)
+	    ePC|PCinc|eRAM|sIR, 
+	    eSP|e16t|sHL,
+	    eH|sACC,
+	    ePC|PCinc|eRAM|sTMP,
+	    ALU_SUB|eALU|sFLG|sH,
+	    eL|sACC,
+	    ePC|PCinc|eRAM|sTMP,
+	    ALU_SUB|eFLG|eALU|sL,
+	    eHL|eRA|sRAM,
+	    sRST
+    }
+
 };
 
-const int load_acc[16] = {
-	ePC|PCinc|eRAM|sIR,
-	eRA|sACC,
-	sRST
-};
-const int stor_reg[16] = {
-	ePC|PCinc|eRAM|sIR,
-	eACC|sRA,
-	sRST
-};
-const int load_imm[16] = {
-	ePC|PCinc|eRAM|sIR,
-	ePC|PCinc|eRAM|sRA,
-	sRST
-};
-const int load_abs[16] = {
-	ePC|PCinc|eRAM|sIR, 
-	ePC|PCinc|eRAM|sH,
-	ePC|PCinc|eRAM|sL,
-	eHL|eRAM|sRA,
-	sRST
-};
-const int load_rel[16] = {
-	ePC|PCinc|eRAM|sIR, 
-	eSP|e16t|sHL,
-	eH|sACC,
-	ePC|PCinc|eRAM|sTMP,
-	ALU_SUB|eALU|sFLG|sH,
-	eL|sACC,
-	ePC|PCinc|eRAM|sTMP,
-	ALU_SUB|eFLG|eALU|sL,
-	eHL|eRAM|sRA,
-	sRST
-};
-const int stor_abs[16] = {
-	ePC|PCinc|eRAM|sIR,
-	ePC|PCinc|eRAM|sH,
-	ePC|PCinc|eRAM|sL,
-	eHL|eRA|sRAM,
-	sRST
-};
-const int stor_rel[16] = {
-	ePC|PCinc|eRAM|sIR, 
-	eSP|e16t|sHL,
-	eH|sACC,
-	ePC|PCinc|eRAM|sTMP,
-	ALU_SUB|eALU|sFLG|sH,
-	eL|sACC,
-	ePC|PCinc|eRAM|sTMP,
-	ALU_SUB|eFLG|eALU|sL,
-	eHL|eRA|sRAM,
-	sRST
-};
-
-void writeInst(FILE* file, const int* instruction) {
-	for (int i = 0; i < 16; i++) {
-		if (instruction[i] > 0) {
-			fprintf(file, "%x ", instruction[i]);
-		} else {
-			fprintf(file, "%d*0", 16 - i);
-			break;
-		}
-	}
-	fprintf(file, "\n");
+void writeInsts(FILE* file, const int instructions[][16], int size, int inst_size) {
+    for (int inst_num = 0; inst_num < size; inst_num++) {
+        for (int index = 0; index < inst_size; index++) {
+            if (instructions[inst_num][index] > 0) {
+                fprintf(file, "%x ", instructions[inst_num][index]);
+            } else {
+                fprintf(file, "%d*0", 16 - index);
+                break;
+            }
+        }
+        fprintf(file, "\n");
+    }
 }
 
 int main() {
 
 	FILE* output = NULL;
+    int size = (int) sizeof insts / sizeof insts[0];
 
 	output = fopen(FILENAME, "w");
 	if (!output) {
 		printf("error opening file: %s\n", FILENAME);
 	}
-	fprintf(output, "v2.0 raw\n");
-	writeInst(output, empty);
-	writeInst(output, load_acc);
-	writeInst(output, stor_reg);
-	writeInst(output, load_imm);
-	writeInst(output, load_abs);
-	writeInst(output, load_rel);
-	writeInst(output, stor_abs);
-	writeInst(output, stor_rel);
+    fprintf(output, "v2.0 raw\n");
+    writeInsts(output, insts, size, INST_SIZE);
 
 	fclose(output);
 	return 0;

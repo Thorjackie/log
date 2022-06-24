@@ -3,13 +3,11 @@
 #include <stdbool.h>
 
 int main() {
-        uint8_t minuend = 8;
-        uint8_t subtrahend = 3;
-        bool carry = 0;
 
-        subtrahend = ~subtrahend;
-        minuend += subtrahend + ~carry;
-        printf("%d\n", minuend);
-
+        int *ptr;
+        int arr[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        ptr = &arr;
+        ptr += 2;
+        printf("%d\n", *ptr);
         return 0;
 }
